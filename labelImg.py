@@ -157,6 +157,9 @@ class MainWindow(QMainWindow, WindowMixin):
         opendir = action('&Open Dir', self.openDir,
                 'Ctrl+u', 'open', u'Open Dir')
 
+        loadAnnotationsDir = action('&Open Annx', self.loadAnnotationsDir,
+                                 'Ctrl+i', 'open', u'Open Annx')
+        
         changeSavedir = action('&Change default saved Annotation dir', self.changeSavedir,
                 'Ctrl+r', 'open', u'Change default saved Annotation dir')
 
@@ -269,7 +272,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 zoom=zoom, zoomIn=zoomIn, zoomOut=zoomOut, zoomOrg=zoomOrg,
                 fitWindow=fitWindow, fitWidth=fitWidth,
                 zoomActions=zoomActions,
-                fileMenuActions=(open,opendir,save,saveAs,close,quit),
+                fileMenuActions=(open,opendir,loadAnnotationsDir,
+                                 save,saveAs,close,quit),
                 beginner=(), advanced=(),
                 editMenu=(edit, copy, delete, None, color1, color2),
                 beginnerContext=(create, edit, copy, delete),
@@ -287,7 +291,10 @@ class MainWindow(QMainWindow, WindowMixin):
                 labelList=labelMenu)
 
         addActions(self.menus.file,
-                (open, opendir,changeSavedir, openAnnotation, self.menus.recentFiles, save, saveAs, close, None, quit))
+                (open, opendir, loadAnnotationsDir,
+                 changeSavedir, openAnnotation,
+                 self.menus.recentFiles, save, saveAs,
+                 close, None, quit))
         addActions(self.menus.help, (help,))
         addActions(self.menus.view, (
             labels, advancedMode, None,
@@ -888,6 +895,9 @@ class MainWindow(QMainWindow, WindowMixin):
         for imgPath in self.mImgList:
             item = QListWidgetItem(imgPath)
             self.fileListWidget.addItem(item)
+
+    def loadAnnotationsDir(self, _value=False):
+        return
 
     def openPrevImg(self, _value=False):
         if not self.mayContinue():

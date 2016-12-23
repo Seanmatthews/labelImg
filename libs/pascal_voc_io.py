@@ -64,7 +64,8 @@ class PascalVocWriter:
         segmented.text = '0'
         return top
 
-    def addBndBox(self, xmin, ymin, xmax, ymax, name, pose='Unspecified', occluded='0', truncated='0'):
+    def addBndBox(self, xmin, ymin, xmax, ymax, name, pose,
+                  occluded, truncated):
         bndbox = {'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax}
         bndbox['name'] = name
         bndbox['pose'] = pose
@@ -80,9 +81,9 @@ class PascalVocWriter:
             pose = SubElement(object_item, 'pose')
             pose.text = str(each_object['pose'])
             occluded = SubElement(object_item, 'occluded')
-            occluded.text = each_object['occluded']
+            occluded.text = str(each_object['occluded'])
             truncated = SubElement(object_item, 'truncated')
-            truncated.text = each_object['truncated']
+            truncated.text = str(each_object['truncated'])
             difficult = SubElement(object_item, 'difficult')
             difficult.text = "0"
             bndbox = SubElement(object_item, 'bndbox')
