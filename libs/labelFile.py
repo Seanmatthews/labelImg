@@ -15,18 +15,28 @@ class LabelFile(object):
     suffix = '.lif'
 
     def __init__(self, filename=None):
-        self.shapes = ()
+        #self.shapes = ()
         self.imagePath = None
         self.imageData = None
         if filename is not None:
             self.load(filename)
 
-    def savePascalVocFormat(self, filename, shapes, imagePath, imageData,
-            lineColor=None, fillColor=None, databaseSrc=None):
+    def savePascalVocFormat(self, filename, shapes, attrs,
+                            imagePath, imageData, lineColor,
+                            fillColor, databaseSrc=None):
         imgFolderPath = os.path.dirname(imagePath)
         imgFolderName = os.path.split(imgFolderPath)[-1]
         imgFileName = os.path.basename(imagePath)
         imgFileNameWithoutExt = os.path.splitext(imgFileName)[0]
+
+        def format_shape(s):
+            return dict(label=unicode(s.label),
+                        line_color=s.line_color.getRgb()\
+                                if s.line_color != lineColor else None,
+                        fill_color=s.fill_color.getRgb()\
+                                if s.fill_color != fillColor else None,
+                        points=[(p.x(), p.y()) for p in s.points])
+
         # Read from file path because self.imageData might be empty if saving to
         # Pascal format
         image = QImage()
@@ -36,10 +46,17 @@ class LabelFile(object):
                                  imageShape, localImgPath=imagePath)
         bSave = False
         for shape in shapes:
-            points = shape['points']
-            label = shape['label']
+            fshape = format_shape(shape)
+            
+            attr = attrs[shape]
+            points = fshape['points']
+            label = fshape['label']
+            pose = attr['pose']
+            occluded = attr['occluded']
+            truncated = attr['truncated']
             bndbox = LabelFile.convertPoints2BndBox(points)
-            writer.addBndBox(bndbox[0], bndbox[1], bndbox[2], bndbox[3], label)
+            writer.addBndBox(bndbox[0], bndbox[1], bndbox[2], bndbox[3],
+                             label, pose, occluded, truncated)
             bSave = True
 
         if bSave:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf8 -*-
+
 import _init_path
 import codecs
 import os.path
@@ -62,6 +62,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.mImgList = []
         self.dirname = None
         self.labelHist = []
+        self.poseHist = []
         self.lastOpenDir = None
 
         # Whether we need to save or not.
@@ -74,13 +75,17 @@ class MainWindow(QMainWindow, WindowMixin):
         self.screencastViewer = "firefox"
         self.screencast = "https://youtu.be/p0nR2YsCY_U"
 
-        self.loadPredefinedClasses()
+        self.loadPredefinedItems('predefined_classes.txt', self.labelHist)
+        self.loadPredefinedItems('predefined_poses.txt', self.poseHist)
+
         # Main widgets and related state.
-        self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
+        self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist,
+                                       poseListItem=self.poseHist)
         self.labelList = QListWidget()
         self.itemsToShapes = {}
         self.shapesToItems = {}
-
+        self.shapeAttrs = {}
+        
         self.labelList.itemActivated.connect(self.labelSelectionChanged)
         self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
         self.labelList.itemDoubleClicked.connect(self.editLabel)
@@ -431,6 +436,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.statusBar().showMessage(message, delay)
 
     def resetState(self):
+        self.shapeAttrs.clear()
         self.itemsToShapes.clear()
         self.shapesToItems.clear()
         self.labelList.clear()
@@ -511,9 +517,12 @@ class MainWindow(QMainWindow, WindowMixin):
         if not self.canvas.editing():
             return
         item = item if item else self.currentItem()
-        text = self.labelDialog.popUp(item.text())
+        shape = self.itemsToShapes[item]
+        attr = self.shapeAttrs[shape]
+        text, newAttr = self.labelDialog.popUp(item.text(), attr)
         if text is not None:
             item.setText(text)
+            self.shapeAttrs[shape] = newAttr
             self.setDirty()
 
     # Tzutalin 20160906 : Add file list and dock to move faster
@@ -553,6 +562,7 @@ class MainWindow(QMainWindow, WindowMixin):
     def remLabel(self, shape):
         item = self.shapesToItems[shape]
         self.labelList.takeItem(self.labelList.row(item))
+        del self.shapeAttrs[shape]
         del self.shapesToItems[shape]
         del self.itemsToShapes[item]
 
@@ -573,34 +583,31 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def saveLabels(self, filename):
         lf = LabelFile()
-        def format_shape(s):
-            return dict(label=unicode(s.label),
-                        line_color=s.line_color.getRgb()\
-                                if s.line_color != self.lineColor else None,
-                        fill_color=s.fill_color.getRgb()\
-                                if s.fill_color != self.fillColor else None,
-                        points=[(p.x(), p.y()) for p in s.points])
-
-        shapes = [format_shape(shape) for shape in self.canvas.shapes]
+        shapes = self.canvas.shapes
+        
         # Can add differrent annotation formats here
         try:
             if self.usingPascalVocFormat is True:
                 print 'savePascalVocFormat save to:' + filename
-                lf.savePascalVocFormat(filename, shapes, unicode(self.filename), self.imageData,
-                    self.lineColor.getRgb(), self.fillColor.getRgb())
-            else:
-                lf.save(filename, shapes, unicode(self.filename), self.imageData,
-                    self.lineColor.getRgb(), self.fillColor.getRgb())
-                self.labelFile = lf
-                self.filename = filename
+                lf.savePascalVocFormat(filename, shapes, self.shapeAttrs,
+                                       unicode(self.filename), self.imageData,
+                                       self.lineColor.getRgb(),
+                                       self.fillColor.getRgb())
+            #else:
+            #    lf.save(filename, shapes, unicode(self.filename), self.imageData,
+            #        self.lineColor.getRgb(), self.fillColor.getRgb())
+            #    self.labelFile = lf
+            #    self.filename = filename
             return True
         except LabelFileError, e:
             self.errorMessage(u'Error saving label data',
                     u'<b>%s</b>' % e)
             return False
 
+    # XXX: Copying may not work with shape attrs
     def copySelectedShape(self):
-        self.addLabel(self.canvas.copySelectedShape())
+        shape = self.canvas.copySelectedShape()
+        self.addLabel(shape)
         #fix copy and delete
         self.shapeSelectionChanged(True)
 
@@ -625,12 +632,15 @@ class MainWindow(QMainWindow, WindowMixin):
 
         position MUST be in global coordinates.
         """
-        if len(self.labelHist) > 0:
-            self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
+        #if len(self.labelHist) > 0:
+        self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist,
+                                       poseListItem=self.poseHist)
 
-        text = self.labelDialog.popUp()
-        if text is not None:
-            self.addLabel(self.canvas.setLastLabel(text))
+        cls, attr = self.labelDialog.popUp()
+        if cls is not None:
+            shape = self.canvas.setLastLabel(cls)
+            self.addLabel(shape)
+            self.shapeAttrs[shape] = attr
             if self.beginner(): # Switch to edit mode.
                 self.canvas.setEditing(True)
                 self.actions.create.setEnabled(True)
@@ -639,8 +649,8 @@ class MainWindow(QMainWindow, WindowMixin):
             self.setDirty()
 
 
-            if text not in self.labelHist:
-                self.labelHist.append(text)
+            #if text not in self.labelHist:
+            #    self.labelHist.append(text)
         else:
             #self.canvas.undoLastLine()
             self.canvas.resetAllLines()
@@ -1058,16 +1068,27 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.endMove(copy=False)
         self.setDirty()
 
-    def loadPredefinedClasses(self):
-        predefined_classes_path = os.path.join('data', 'predefined_classes.txt')
-        if os.path.exists(predefined_classes_path) is True:
-            with codecs.open(predefined_classes_path, 'r', 'utf8') as f:
+#    def loadPredefinedClasses(self):
+#        predefined_classes_path = os.path.join('data', 'predefined_classes.txt')
+#        if os.path.exists(predefined_classes_path) is True:
+#            with codecs.open(predefined_classes_path, 'r', 'utf8') as f:
+#                for line in f:
+#                    line = line.strip()
+#                    if self.labelHist is None:
+#                        self.lablHist = [line]
+#                    else:
+#                        self.labelHist.append(line)
+
+    def loadPredefinedItems(self, filename, itemList):
+        predefined_path = os.path.join('data', filename)
+        if os.path.exists(predefined_path) is True:
+            with codecs.open(predefined_path, 'r', 'utf8') as f:
                 for line in f:
                     line = line.strip()
-                    if self.labelHist is None:
-                        self.lablHist = [line]
+                    if itemList is None:
+                        itemList = [line]
                     else:
-                        self.labelHist.append(line)
+                        itemList.append(line)
 
     def loadPascalXMLByFilename(self, xmlPath):
         if self.filename is None:

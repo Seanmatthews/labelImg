@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf8 -*-
 import _init_path
 import sys
 from xml.etree import ElementTree
@@ -65,9 +64,12 @@ class PascalVocWriter:
         segmented.text = '0'
         return top
 
-    def addBndBox(self, xmin, ymin, xmax, ymax, name):
+    def addBndBox(self, xmin, ymin, xmax, ymax, name, pose='Unspecified', occluded='0', truncated='0'):
         bndbox = {'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax}
         bndbox['name'] = name
+        bndbox['pose'] = pose
+        bndbox['occluded'] = occluded
+        bndbox['truncated'] = truncated
         self.boxlist.append(bndbox)
 
     def appendObjects(self, top):
@@ -76,9 +78,11 @@ class PascalVocWriter:
             name = SubElement(object_item, 'name')
             name.text = unicode(each_object['name'])
             pose = SubElement(object_item, 'pose')
-            pose.text = "Unspecified"
+            pose.text = str(each_object['pose'])
+            occluded = SubElement(object_item, 'occluded')
+            occluded.text = each_object['occluded']
             truncated = SubElement(object_item, 'truncated')
-            truncated.text = "0"
+            truncated.text = each_object['truncated']
             difficult = SubElement(object_item, 'difficult')
             difficult.text = "0"
             bndbox = SubElement(object_item, 'bndbox')
