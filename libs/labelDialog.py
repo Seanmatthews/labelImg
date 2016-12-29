@@ -28,19 +28,16 @@ class LabelDialog(QDialog):
         self.poseListWidget.setCurrentRow(0)
 
         self.edit = QLineEdit()
-#        self.edit.setText(text)
         self.edit.setValidator(labelValidator())
-#        self.edit.returnPressed.connect(lambda: self.addItemToList(self.listWidget, self.edit))
 
         self.pose = QLineEdit()
         self.pose.setValidator(labelValidator())
-#        self.pose.returnPressed.connect(lambda: self.addItemToList(self.poseListWidget, self.pose))
 
-        self.buttonBox = bb = BB(BB.Ok | BB.Cancel, Qt.Horizontal, self)
-        bb.button(BB.Ok).setIcon(newIcon('done'))
-        bb.button(BB.Cancel).setIcon(newIcon('undo'))
-        bb.accepted.connect(self.accept)
-        bb.rejected.connect(self.reject)
+#        self.buttonBox = bb = BB(BB.Ok | BB.Cancel, Qt.Horizontal, self)
+#        bb.button(BB.Ok).setIcon(newIcon('done'))
+#        bb.button(BB.Cancel).setIcon(newIcon('undo'))
+#        bb.accepted.connect(self.accept)
+#        bb.rejected.connect(self.reject)
         
         # Layout
         layout = QVBoxLayout()
@@ -51,8 +48,8 @@ class LabelDialog(QDialog):
         layout.addLayout(listWidgets)
 
         editWidgets = QHBoxLayout()
-        editWidgets.addWidget(self.pose)
         editWidgets.addWidget(self.edit)
+        editWidgets.addWidget(self.pose)
         layout.addLayout(editWidgets)
 
         checkBoxes = QHBoxLayout()
@@ -60,12 +57,11 @@ class LabelDialog(QDialog):
         checkBoxes.addWidget(self.truncatedCheckBox)
         layout.addLayout(checkBoxes)
 
-        layout.addWidget(bb)
+#        layout.addWidget(bb)
         
         self.setLayout(layout)
 
     def keyPressEvent(self, tQKeyEvent):
-        print tQKeyEvent.key()
         k = tQKeyEvent.key()
         if k == Qt.Key_Enter or k == Qt.Key_Return:
             if self.pose.text().trimmed() or self.edit.text().trimmed():
@@ -84,7 +80,8 @@ class LabelDialog(QDialog):
         
     def addItemToList(self, tQListWidget, tQLineEdit):
         if tQLineEdit.text().trimmed():
-            tQListWidget.addItem(tQLineEdit.text().trimmed())
+            tQListWidget.insertItem(0, tQLineEdit.text().trimmed())
+            tQListWidget.setCurrentRow(0)
             tQLineEdit.clear()
         
     def popUp(self, text='', attr=None, move=True):

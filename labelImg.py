@@ -655,9 +655,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 self.actions.editMode.setEnabled(True)
             self.setDirty()
 
-
-            #if text not in self.labelHist:
-            #    self.labelHist.append(text)
+            if cls not in self.labelHist:
+                self.labelHist.append(cls)
         else:
             #self.canvas.undoLastLine()
             self.canvas.resetAllLines()
