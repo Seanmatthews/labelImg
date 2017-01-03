@@ -657,6 +657,8 @@ class MainWindow(QMainWindow, WindowMixin):
 
             if cls not in self.labelHist:
                 self.labelHist.append(cls)
+            if attr['pose'] not in self.poseHist:
+                self.poseHist.append(attr['pose'])
         else:
             #self.canvas.undoLastLine()
             self.canvas.resetAllLines()
