@@ -758,6 +758,8 @@ class MainWindow(QMainWindow, WindowMixin):
                     xmlPath = os.path.join(self.defaultSaveDir, basename)
                     self.loadPascalXMLByFilename(xmlPath)
 
+            self.setDirty()
+
             return True
         return False
 
@@ -1004,10 +1006,10 @@ class MainWindow(QMainWindow, WindowMixin):
 
     # Message Dialogs. #
     def hasLabels(self):
-        if not self.itemsToShapes:
-            self.errorMessage(u'No objects labeled',
-                    u'You must label at least one object to save the file.')
-            return False
+        #if not self.itemsToShapes:
+        #    self.errorMessage(u'No objects labeled',
+        #            u'You must label at least one object to save the file.')
+        #    return False
         return True
 
     def mayContinue(self):

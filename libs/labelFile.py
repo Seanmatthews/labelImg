@@ -44,7 +44,7 @@ class LabelFile(object):
         imageShape = [image.height(), image.width(), 1 if image.isGrayscale() else 3]
         writer = PascalVocWriter(imgFolderName, imgFileNameWithoutExt,\
                                  imageShape, localImgPath=imagePath)
-        bSave = False
+        bSave = True #False
         for shape in shapes:
             fshape = format_shape(shape)
             
