@@ -918,6 +918,9 @@ class MainWindow(QMainWindow, WindowMixin):
             if filename:
                 self.loadFile(filename)
 
+            annx = filename[:-3] + 'xml'
+            self.loadPascalXMLByFilename(annx)
+
     def openNextImg(self, _value=False):
         # Proceding next image without dialog if having any label
         if self.autoSaving is True and self.defaultSaveDir is not None:
@@ -941,6 +944,9 @@ class MainWindow(QMainWindow, WindowMixin):
         if filename:
             self.loadFile(filename)
 
+        annx = filename[:-3] + 'xml'
+        self.loadPascalXMLByFilename(annx)
+        
     def openFile(self, _value=False):
         if not self.mayContinue():
             return
@@ -1013,7 +1019,7 @@ class MainWindow(QMainWindow, WindowMixin):
         return True
 
     def mayContinue(self):
-        return not (self.dirty and len(self.labelList) and not self.discardChangesDialog())
+        return True #not (self.dirty) # and len(self.labelList) and not self.discardChangesDialog())
 
     def discardChangesDialog(self):
         yes, no = QMessageBox.Yes, QMessageBox.No
@@ -1111,6 +1117,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         tVocParseReader = PascalVocReader(xmlPath)
         shapes = tVocParseReader.getShapes()
+        print 'loading labels'
         self.loadLabels(shapes)
 
 class Settings(object):
