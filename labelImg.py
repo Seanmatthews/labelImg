@@ -1013,7 +1013,7 @@ class MainWindow(QMainWindow, WindowMixin):
         return True
 
     def mayContinue(self):
-        return not (self.dirty and not self.discardChangesDialog())
+        return not (self.dirty and len(self.labelList) and not self.discardChangesDialog())
 
     def discardChangesDialog(self):
         yes, no = QMessageBox.Yes, QMessageBox.No
